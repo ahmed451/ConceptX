@@ -23,7 +23,8 @@ outputpath = args.output_path
 
 Ks = [int(k) for k in args.cluster.split(',')]
 print ("Cluster input ",Ks)
-if range:
+print("range:", args.range)
+if args.range:
 	tmp = list(range(Ks[0], Ks[1]+1, Ks[2]))
 	Ks = tmp
 

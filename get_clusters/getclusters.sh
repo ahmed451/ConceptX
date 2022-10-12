@@ -1,16 +1,18 @@
 #!/bin/bash
 
 scriptDir=../scripts/
-inputPath=../data/ # path to a sentence file
-input=text.in #name of the sentence file
+inputPath=$1 #../data/ # path to a sentence file
+input=$2 #text.in #name of the sentence file
+lang=$4
 # model name or path to a finetuned model
-model="bert-base-cased"
+model="qarib/bert-base-qarib"
+model="bert-base-multilingual-cased"
 
 # maximum sentence length
 sentence_length=300
 
 # analyze latent concepts of layer 12
-layer=12
+layer=$3
 
 working_file=$input.tok.sent_len #do not change this
 
@@ -22,7 +24,7 @@ python ${scriptDir}/sentence_length.py --text-file $input.tok --length ${sentenc
 
 #Optional step. if sentence file is larger than 50k sentences, split it into smaller chunks for easy loading of activations
 
-source activate neurox_pip
+conda activate neurox_pip
 #3. Extract layer-wise activations
 python -m neurox.data.extraction.transformers_extractor --decompose_layers --filter_layers ${layer} --output_type json ${model} ${working_file} ${working_file}.activations.json
 
@@ -33,20 +35,20 @@ python ${scriptDir}/create_data_single_layer.py --text-file ${working_file} --ac
 python ${scriptDir}/frequency_count.py --input-file ${working_file} --output-file ${working_file}.words_freq
 
 #6. Filter number of tokens to fit in the memory for clustering. Input file will be from step 4. minfreq sets the minimum frequency. If a word type appears is coming less than minfreq, it will be dropped. if a word comes 
-minfreq=0
-maxfreq=1000000
-delfreq=1000000
+minfreq=5
+maxfreq=1000
+delfreq=1000
 python ${scriptDir}/frequency_filter_data.py --input-file ${working_file}-dataset.json --frequency-file ${working_file}.words_freq --sentence-file ${working_file}-sentences.json --minimum-frequency $minfreq --maximum-frequency $maxfreq --delete-frequency ${delfreq} --output-file ${working_file}
 
 #7. Run clustering 
 
 conda activate clustering
 
-mkdir results
+mkdir results_${lang}${layer}
 DATASETPATH=${working_file}_min_${minfreq}_max_${maxfreq}_del_${delfreq}-dataset.json
 VOCABFILE=processed-vocab.npy
 POINTFILE=processed-point.npy
-RESULTPATH=./results
+RESULTPATH=./results_${lang}${layer}
 CLUSTERS=50,100,50  #Comma separated for multiple values or three values to define a range
 # first number is number of clusters to start with, second is number of clusters to stop at and third one is the increment from the first value
 # 600 1000 200 means [600,800,1000] number of clusters

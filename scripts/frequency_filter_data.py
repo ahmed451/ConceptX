@@ -53,6 +53,7 @@ files_size = {}
 files = (args.sentence_file).split(',')
 sentences = []
 for idx,file in enumerate(files):
+    print("open:",idx,file)
     f = open(file)
     filesize = 0
     data= json.load(f)
